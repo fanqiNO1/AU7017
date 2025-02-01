@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from mmengine.evaluator import BaseMetric
 from mmengine.hooks import CheckpointHook
 from mmengine.logging import print_log
@@ -22,10 +23,25 @@ class Model(BaseModel):
                                        in_channels=1,
                                        hidden_size=64,
                                        num_attention_heads=8,
-                                       num_key_value_heads=2,
+                                       num_key_value_heads=8,
                                        intermediate_size=128,
                                        act_fn=nn.SiLU())
-        self.loss = nn.CrossEntropyLoss()
+
+    def loss(self, output, y):
+        logits = torch.log_softmax(output, dim=-1)
+        # get y_reject
+        with torch.no_grad():
+            y_chosen = y.unsqueeze(-1)
+            reject_logits = torch.scatter(logits,
+                                          dim=-1,
+                                          index=y_chosen,
+                                          value=-torch.inf)
+            y_reject = torch.argmax(reject_logits, dim=-1, keepdim=True)
+        # compute loss
+        probs_chosen = torch.gather(logits, dim=-1, index=y_chosen).squeeze(-1)
+        probs_reject = torch.gather(logits, dim=-1, index=y_reject).squeeze(-1)
+        loss = -F.logsigmoid(probs_chosen - probs_reject).mean()
+        return loss
 
     def log_params(self):
         params = sum(p.numel() for p in self.model.parameters())
@@ -83,7 +99,7 @@ def main():
 
     runner = Runner(
         model=model,
-        work_dir=f'./ckpts/vit/{str(model.model)}',
+        work_dir=f'./ckpts/cpo/{str(model.model)}',
         train_dataloader=train_loader,
         val_dataloader=test_loader,
         train_cfg=dict(by_epoch=True, max_epochs=10, val_interval=1),
