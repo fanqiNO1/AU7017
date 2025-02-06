@@ -23,7 +23,7 @@ class Model(BaseModel):
                                        in_channels=1,
                                        hidden_size=64,
                                        num_attention_heads=8,
-                                       num_key_value_heads=8,
+                                       num_key_value_heads=2,
                                        intermediate_size=128,
                                        act_fn=nn.SiLU())
 
