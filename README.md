@@ -28,7 +28,7 @@ python cpo/main.py
 
 参考 LLaVA 架构，实现了用于 MNIST 数据集的多模态模型。
 
-> !IMPORTANT
+> \[!IMPORTANT\]
 > MnistVL 部分暂无实验结果。
 
 测试 `Qwen2.5-VL-3B-Instruct` 方法：

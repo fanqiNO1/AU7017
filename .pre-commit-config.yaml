@@ -35,7 +35,6 @@ repos:
         args: ["--number"]
         additional_dependencies:
           - mdformat_frontmatter
-          - linkify-it-py
   - repo: https://github.com/myint/docformatter
     rev: 06907d0
     hooks:
